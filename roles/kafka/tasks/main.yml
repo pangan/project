@@ -1,6 +1,42 @@
 ---
-- name: "Starting!"
+- name: "Change Hostname"
   become: yes
   hostname:
     name: "{{ inventory_hostname }}"
 
+- name: build hosts file
+  become: true
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].internal_ip }} {{item}}" state=present
+  when:
+    - hostvars[item].internal_ip is defined
+  with_items:
+    - "{{ groups['all'] }}"
+
+- name: Install packages
+  become: yes
+  apt: pkg={{ item }} state=latest
+  with_items:
+    - openjdk-8-jdk
+    - zookeeperd
+
+- name: Download kafka
+  become: yes
+  get_url:
+    url: http://apache.mirrors.spacedump.net/kafka/0.11.0.0/kafka_2.11-0.11.0.0.tgz
+    dest: /tmp/kafka_2.11-0.11.0.0.tgz
+    timeout: 60
+
+- name: Unzip Kafka
+  become: yes
+  unarchive:
+    src: /tmp/kafka_2.11-0.11.0.0.tgz
+    dest: /opt/
+    remote_src: yes
+
+- name: Create log directory
+  become: yes
+  file: path=/var/log/kafka state=directory
+
+- name: Start Kafka
+  become: yes
+  shell: 'nohup /opt/kafka_2.11-0.11.0.0/bin/kafka-server-start.sh /opt/kafka_2.11-0.11.0.0/config/server.properties > /var/log/kafka/kafka.log &'

@@ -1,2 +1,136 @@
 ---
-TEST_VARIABLE: 0
+########################################################################################################################
+## STRESS TOPICS
+########################################################################################################################
+
+  KAFKA_STRESS_REPLICA: ["2"]
+  KAFKA_STRESS_PARTITIONS: ["1","2","3","5","7","10","15","20","25","30"]
+
+########################################################################################################################
+## General Version
+########################################################################################################################
+
+  KAFKA_VERSION: 0.10.2.0
+  KAFKA_FILENAME: "kafka_2.12-0.10.2.0.tgz"
+
+  KAFKA_PROPERTIES_FILE: "server.properties"
+
+  #KAFKA_DATADIR: "{{ KAFKA_FILENAME | regex_replace('\.[^.]*$','') }}"
+
+  KAFKA_ENVIROMENT_HEAP_SIZE: "-Xmx3G -Xms3G"
+
+########################################################################################################################
+## Variables taken from vagrant
+########################################################################################################################
+  KAFKA_CLUSTER: "{{ inventory_hostname }}"
+
+  KAFKA_CLUSTERID_VARNAME: "kafka_cluster_id"
+  KAFKA_CLUSTERID_EXT_IP_VARNAME: "internal_ip"
+  KAFKA_CLUSTER_SIZE_VARNAME: "cluster_size"
+  ZOOKEEPER_CLUSTER_SERVERS_VARNAME: "zookeeper_cluster_servers"
+
+  KAFKA_CLUSTERID: "{{ hostvars[KAFKA_CLUSTER][KAFKA_CLUSTERID_VARNAME] }}"
+  KAFKA_CLUSTERID_EXT_IP: "{{ hostvars[KAFKA_CLUSTER][KAFKA_CLUSTERID_EXT_IP_VARNAME] }}"
+  KAFKA_CLUSTER_SIZE: "{{ hostvars[KAFKA_CLUSTER][KAFKA_CLUSTER_SIZE_VARNAME] }}"
+  ZOOKEEPER_CLUSTER_SERVERS: "{{ hostvars[KAFKA_CLUSTER][ZOOKEEPER_CLUSTER_SERVERS_VARNAME] }}"
+
+########################################################################################################################
+## Configuration file
+########################################################################################################################
+  ############################# Socket Server Settings #############################
+
+
+  KAFKA_BROKER_ID: "{{ KAFKA_CLUSTERID }}" # The id of the broker. This must be set to a unique integer for each broker.
+
+  KAFKA_PORT: 9092 # The port the socket server listens on
+  KAFKA_HOST_NAME: "{{ KAFKA_CLUSTERID_EXT_IP }}" # Hostname the broker will bind to. If not set, the server will bind to all interfaces
+
+
+  # Hostname the broker will advertise to producers and consumers. If not set, it uses the
+  # value for "host.name" if configured.  Otherwise, it will use the value returned from
+  # java.net.InetAddress.getCanonicalHostName().
+  KAFKA_ADVERTISED_HOST_NAME: "{{ KAFKA_CLUSTERID_EXT_IP }}"
+
+  # The port to publish to ZooKeeper for clients to use. If this is not set,
+  # it will publish the same port that the broker binds to.
+  #advertised.port=<port accessible by clients>
+
+
+  KAFKA_NUM_NETWORK_THREADS: 2 # The number of threads handling network requests
+  KAFKA_NUM_IO_THREADS: 2 # The number of threads doing disk I/O
+
+
+  KAFKA_SOCKET_SEND_BUFFER_BYTES: 1048576 # The send buffer (SO_SNDBUF) used by the socket server
+  KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 1048576 # The receive buffer (SO_RCVBUF) used by the socket server
+
+
+  KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600 # The maximum size of a request that the socket server will accept (protection against OOM)
+
+
+  ############################# Log Basics #############################
+
+  # A comma seperated list of directories under which to store log files
+  KAFKA_LOG_DIRS: /tmp/kafka-logs
+
+  # The default number of log partitions per topic. More partitions allow greater
+  # parallelism for consumption, but this will also result in more files across
+  # the brokers.
+  KAFKA_NUM_PARTITIONS: 2
+
+  ############################# Log Flush Policy #############################
+
+  # Messages are immediately written to the filesystem but by default we only fsync() to sync
+  # the OS cache lazily. The following configurations control the flush of data to disk.
+  # There are a few important trade-offs here:
+  #    1. Durability: Unflushed data may be lost if you are not using replication.
+  #    2. Latency: Very large flush intervals may lead to latency spikes when the flush does occur as there will be a lot of data to flush.
+  #    3. Throughput: The flush is generally the most expensive operation, and a small flush interval may lead to exceessive seeks.
+  # The settings below allow one to configure the flush policy to flush data after a period of time or
+  # every N messages (or both). This can be done globally and overridden on a per-topic basis.
+
+  # The number of messages to accept before forcing a flush of data to disk
+  #log.flush.interval.messages=10000
+
+  # The maximum amount of time a message can sit in a log before we force a flush
+  #log.flush.interval.ms=1000
+
+  ############################# Log Retention Policy #############################
+
+  # The following configurations control the disposal of log segments. The policy can
+  # be set to delete segments after a period of time, or after a given size has accumulated.
+  # A segment will be deleted whenever *either* of these criteria are met. Deletion always happens
+  # from the end of the log.
+
+  KAFKA_LOG_RETENTION_HOURS: 168 # The minimum age of a log file to be eligible for deletion
+
+
+  # A size-based retention policy for logs. Segments are pruned from the log as long as the remaining
+  # segments don't drop below log.retention.bytes.
+  #log.retention.bytes=1073741824
+
+  # The maximum size of a log segment file. When this size is reached a new log segment will be created.
+  KAFKA_LOG_SEGMENT_BYTES: 536870912
+
+  # The interval at which log segments are checked to see if they can be deleted according
+  # to the retention policies
+  KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 60000
+
+  ############################# Zookeeper #############################
+
+  # Zookeeper connection string (see zookeeper docs for details).
+  # This is a comma separated host:port pairs, each corresponding to a zk
+  # server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002".
+  # You can also append an optional chroot string to the urls to specify the
+  # root directory for all kafka znodes.
+  #KAFKA_ZOOKEEPER_CONNECT: 10.30.3.2:2181,10.30.3.3:2181,10.30.3.4:2181
+
+  # Timeout in ms for connecting to zookeeper
+  KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 1000000
+
+  LOG_CLEANUP_POLICY: delete
+
+########################################################################################################################
+## JMX AGENT
+########################################################################################################################
+
+  KAFKA_ENVIROMENT_JMX_AGENT: "-javaagent:/home/{{ ansible_user_id }}/jmx_exporter/jmx_prometheus_javaagent/target/jmx_prometheus_javaagent-0.10-SNAPSHOT.jar=5556:/home/{{ ansible_user_id }}/jmx_exporter/nofilter.yml"
