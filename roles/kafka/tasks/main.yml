@@ -1,0 +1,6 @@
+---
+- name: "Starting!"
+  become: yes
+  hostname:
+    name: "{{ inventory_hostname }}"
+
