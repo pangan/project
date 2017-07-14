@@ -1,54 +1,54 @@
 ########################################################################################################################
 # GENERAL
 ########################################################################################################################
-$KAFKA_HOSTS = []
-$KAFKA_GROUPS = {}
-$KAFKA_CLUSTER_HOST_VARS = {}
+$PERSISTER_HOSTS = []
+$PERSISTER_GROUPS = {}
+$PERSISTER_CLUSTER_HOST_VARS = {}
 
 ########################################################################################################################
 # CONFIGURATION (to be modified)
 ########################################################################################################################
-$KAFKA_CLUSTER_NODES = 1 #Number of nodes
+$PERSISTER_CLUSTER_NODES = 1 #Number of nodes
 
-$KAFKA_HOSTNAME = "kafka"
-$KAFKA_GROUP_NAME = "kafka"
-$KAFKA_NETWORK_IPOFFSET = 20
+$PERSISTER_HOSTNAME = "persister"
+$PERSISTER_GROUP_NAME = "persister"
+$PERSISTER_NETWORK_IPOFFSET = 20
 
 ########################################################################################################################
 # VIRTUALBOX PROVIDER
 ########################################################################################################################
-$KAFKA_VBOX_BOXTYPE = "bento/ubuntu-16.04"
+$PERSISTER_VBOX_BOXTYPE = "bento/ubuntu-16.04"
 
 ########################################################################################################################
 # PROVISIONING VARIABLES
 ########################################################################################################################
-kafka_hosts = []
-(1..$KAFKA_CLUSTER_NODES).each do |i|
-  kafka_hosts.push("#{$KAFKA_HOSTNAME}#{i}")
+persister_hosts = []
+(1..$PERSISTER_CLUSTER_NODES).each do |i|
+  persister_hosts.push("#{$PERSISTER_HOSTNAME}#{i}")
 end
 
-(1..$KAFKA_CLUSTER_NODES).each do |i|
-  ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$KAFKA_NETWORK_IPOFFSET}",
-        "hostname" => "#{$KAFKA_HOSTNAME}#{i}",
-        "KAFKA_cluster_id" => "#{i}",
-        "KAFKA_cluster_size" => $KAFKA_CLUSTER_NODES}
-  $KAFKA_CLUSTER_HOST_VARS["#{$KAFKA_HOSTNAME}#{i}"] = ip
+(1..$PERSISTER_CLUSTER_NODES).each do |i|
+  ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$PERSISTER_NETWORK_IPOFFSET}",
+        "hostname" => "#{$PERSISTER_HOSTNAME}#{i}",
+        "PERSISTER_cluster_id" => "#{i}",
+        "PERSISTER_cluster_size" => $PERSISTER_CLUSTER_NODES}
+  $PERSISTER_CLUSTER_HOST_VARS["#{$PERSISTER_HOSTNAME}#{i}"] = ip
 end
 
-kafka_cluster_servers = []
-(1..$KAFKA_CLUSTER_NODES).each do |i|
-  kafka_cluster_servers.push("#{$NETWORK_INTERNAL_IP}#{i+$KAFKA_NETWORK_IPOFFSET}")
+persister_cluster_servers = []
+(1..$PERSISTER_CLUSTER_NODES).each do |i|
+  persister_cluster_servers.push("#{$NETWORK_INTERNAL_IP}#{i+$PERSISTER_NETWORK_IPOFFSET}")
 end
 
-kafka_group_vars = {
-    "kafka_cluster_size" => $KAFKA_CLUSTER_NODES,
-    "ip_offset" => $KAFKA_NETWORK_IPOFFSET,
-    "kafka_hosts" => kafka_hosts,
-    "kafka_cluster_servers" => kafka_cluster_servers
+persister_group_vars = {
+    "persister_cluster_size" => $PERSISTER_CLUSTER_NODES,
+    "ip_offset" => $PERSISTER_NETWORK_IPOFFSET,
+    "persister_hosts" => persister_hosts,
+    "persister_cluster_servers" => persister_cluster_servers
 }
 
-$KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}"] = kafka_hosts
-$KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
+$PERSISTER_GROUPS["#{$PERSISTER_GROUP_NAME}"] = persister_hosts
+$PERSISTER_GROUPS["#{$PERSISTER_GROUP_NAME}:vars"] = persister_group_vars
 
 # $CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($GROUPS)
 # $CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($CLUSTER_HOST_VARS)
@@ -57,14 +57,14 @@ $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
 ########################################################################################################################
 # DEFINITION
 ########################################################################################################################
-(1..$KAFKA_CLUSTER_NODES).each do |i|
+(1..$PERSISTER_CLUSTER_NODES).each do |i|
   Vagrant.configure("2") do |config|
     config.vm.synced_folder ".", "/vagrant", disabled: true
     config.vm.box_check_update = false
 
     config.vm.provider "virtualbox" do |v, override|
       override.ssh.username = $VIRTUALBOX_USERNAME
-      override.vm.box = $KAFKA_VBOX_BOXTYPE
+      override.vm.box = $PERSISTER_VBOX_BOXTYPE
 
       v.customize ["modifyvm", :id, "--cableconnected1", "on"]
     end
@@ -72,7 +72,7 @@ $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
     # config.vm.provider "openstack" do |cc, override|
     #   override.ssh.username = $OPENSTACK_CITYCLOUD_ENV_USERNAME
     #
-    #   cc.image = $KAFKA_OPENSTACK_CITYCLOUD_IMAGE
+    #   cc.image = $PERSISTER_OPENSTACK_CITYCLOUD_IMAGE
     #
     #   cc.identity_api_version = $OPENSTACK_CITYCLOUD_OS_IDENTITY_API_VERSION
     #
@@ -92,15 +92,15 @@ $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
     #   cc.openstack_network_url = $OPENSTACK_CITYCLOUD_ENV_NETWORK_URL
     #   cc.openstack_image_url = $OPENSTACK_CITYCLOUD_ENV_IMAGE_URL
     #
-    #   cc.floating_ip_pool = $KAFKA_OPENSTACK_CITYCLOUD_IPPOOL
+    #   cc.floating_ip_pool = $PERSISTER_OPENSTACK_CITYCLOUD_IPPOOL
     # end
 
-    config.vm.define "#{$KAFKA_HOSTNAME}#{i}" do |g|
-      g.vm.hostname = "#{$KAFKA_HOSTNAME}#{i}"
+    config.vm.define "#{$PERSISTER_HOSTNAME}#{i}" do |g|
+      g.vm.hostname = "#{$PERSISTER_HOSTNAME}#{i}"
 
       g.vm.provider "virtualbox" do |vb, override|
-        vb.name = "xproject::#{$KAFKA_HOSTNAME}#{i}"
-        override.vm.network "private_network", ip: "#{$NETWORK_INTERNAL_IP}#{i+$KAFKA_NETWORK_IPOFFSET}"
+        vb.name = "xproject::#{$PERSISTER_HOSTNAME}#{i}"
+        override.vm.network "private_network", ip: "#{$NETWORK_INTERNAL_IP}#{i+$PERSISTER_NETWORK_IPOFFSET}"
 
         vb.memory = 1024
         vb.cpus = 1
@@ -110,21 +110,21 @@ $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
       #   cc.server_name = "op5::#{$OPENSTACK_CITYCLOUD_OS_NETWORK_INTERNAL_NAME}::#{$HOSTNAME}#{i}"
       #   cc.project_name = $OPENSTACK_CITYCLOUD_ENV_PROJECTNAME
       #
-      #   cc.flavor = $KAFKA_OPENSTACK_CITYCLOUD_FLAVOUR
+      #   cc.flavor = $PERSISTER_OPENSTACK_CITYCLOUD_FLAVOUR
       #
-      #   $KAFKA_OPENSTACK_CITYCLOUD_NETWORKS = [{name: $OPENSTACK_CITYCLOUD_OS_NETWORK_INTERNAL_NAME,
+      #   $PERSISTER_OPENSTACK_CITYCLOUD_NETWORKS = [{name: $OPENSTACK_CITYCLOUD_OS_NETWORK_INTERNAL_NAME,
       #                                              address: "#{$OPENSTACK_CITYCLOUD_OS_NETWORK_INTERNAL_IP}#{i+$NETWORK_IPOFFSET}"
       #                                             }]
       #
-      #   cc.networks = $KAFKA_OPENSTACK_CITYCLOUD_NETWORKS
+      #   cc.networks = $PERSISTER_OPENSTACK_CITYCLOUD_NETWORKS
       # end
 
-      if i == $KAFKA_CLUSTER_NODES
+      if i == $PERSISTER_CLUSTER_NODES
         g.vm.provision "ansible" do |ansible|
           ansible.limit="all"
-          ansible.playbook = "kafka.yml"
-          ansible.groups = $KAFKA_GROUPS
-          ansible.host_vars = $KAFKA_CLUSTER_HOST_VARS
+          ansible.playbook = "persister.yml"
+          ansible.groups = $PERSISTER_GROUPS
+          ansible.host_vars = $PERSISTER_CLUSTER_HOST_VARS
         end
       end
     end

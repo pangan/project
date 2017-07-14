@@ -1,0 +1,22 @@
+---
+  INFLUXDB_IP: '10.5.0.21'
+  INFLUXDB_USER: 'xproject'
+  INFLUXDB_PASSWORD: 'password'
+
+#  KAFKA_INVENTORY: "{{ inventory_hostname }}"
+#  KAFKA_CLUSTER_INFO_CONF_VARNAME: "kafka_cluster_info"
+#  KAFKA_URI: "{{ hostvars[KAFKA_INVENTORY][KAFKA_CLUSTER_INFO_CONF_VARNAME] }}"
+#
+#  ZOOKEEPER_CLUSTER_INFO_CONF_VARNAME: "zookeeper_cluster_info"
+#  ZOOKEEPER_URI: "{{ hostvars[KAFKA_INVENTORY][ZOOKEEPER_CLUSTER_INFO_CONF_VARNAME] }}"
+  KAFKA_URI: "10.5.0.11:9092"
+  ZOOKEEPER_URI: "10.5.0.11:2181"
+########################################################################################################################
+## Variables taken from vagrant
+########################################################################################################################
+
+  PERSISTER_CLUSTER: "{{ inventory_hostname }}"
+
+  PERSISTER_CLUSTERID_VARNAME: "cluster_id"
+
+  PERSISTER_CLUSTERID: "{{ hostvars[PERSISTER_CLUSTER][PERSISTER_CLUSTERID_VARNAME] }}"

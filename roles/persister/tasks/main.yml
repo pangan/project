@@ -1,0 +1,113 @@
+---
+  - name: Clone the Monasca Persister repository
+    become: yes
+    git: repo=https://github.com/openstack/monasca-persister.git
+        dest=/opt/monasca-persister
+        force=yes
+
+  - name: Install aptitude
+    become: yes
+    apt: pkg=aptitude state=present
+
+  - name: Update and upgrade apt packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+    become: yes
+
+  - name: Install python tools
+    become: yes
+    apt: pkg=python-pip
+
+  - name: Install python requirements
+    become: yes
+    shell: 'pip install {{ item }}'
+    with_items:
+      - '--upgrade pip'
+      - '-r /opt/monasca-persister/requirements.txt'
+      - 'influxdb'
+
+  - name: Install Monasca Persister
+    become: yes
+    shell:
+      cmd: 'python setup.py install'
+      chdir: /opt/monasca-persister
+
+  - name: Creating needed directories
+    become: yes
+    file: path=/var/log/monasca/persister state=directory
+
+  - name: Updating config file
+    become: yes
+    copy:
+      dest: /etc/monasca/persister.conf
+      content: |
+        [DEFAULT]
+        log_config_append=/etc/monasca/persister-logging.conf
+
+        [repositories]
+        # The driver to use for the metrics repository
+        metrics_driver = monasca_persister.repositories.influxdb.metrics_repository:MetricInfluxdbRepository
+        #metrics_driver = monasca_persister.repositories.cassandra.metrics_repository:MetricCassandraRepository
+
+        # The driver to use for the alarm state history repository
+        alarm_state_history_driver = monasca_persister.repositories.influxdb.alarm_state_history_repository:AlarmStateHistInfluxdbRepository
+        #alarm_state_history_driver = monasca_persister.repositories.cassandra.alarm_state_history_repository:AlarmStateHistCassandraRepository
+
+        [zookeeper]
+        # Comma separated list of host:port
+        uri = {{ ZOOKEEPER_URI | join(',')}}
+        partition_interval_recheck_seconds = 15
+
+        [kafka_alarm_history]
+        # Comma separated list of Kafka broker host:port.
+        uri = {{ KAFKA_URI | join(',')}}
+        group_id = {{ PERSISTER_CLUSTERID }}_alarm-state-transitions
+        topic = alarm-state-transitions
+        consumer_id = {{ PERSISTER_CLUSTERID }}
+        client_id = {{ PERSISTER_CLUSTERID }}
+        database_batch_size = 1000
+        max_wait_time_seconds = 30
+        # The following 3 values are set to the kakfa-python defaults
+        fetch_size_bytes = 4096
+        buffer_size = 4096
+        # 8 times buffer size
+        max_buffer_size = 32768
+        # Path in zookeeper for kafka consumer group partitioning algo
+        zookeeper_path = /persister_partitions/alarm-state-transitions
+        num_processors = 1
+
+        [kafka_metrics]
+        # Comma separated list of Kafka broker host:port
+        uri = {{ KAFKA_URI | join(',')}}
+        group_id = {{ PERSISTER_CLUSTERID }}_metrics
+        topic = metrics
+        consumer_id = {{ PERSISTER_CLUSTERID }}
+        client_id = {{ PERSISTER_CLUSTERID }}
+        database_batch_size = 1000
+        max_wait_time_seconds = 30
+        # The following 3 values are set to the kakfa-python defaults
+        fetch_size_bytes = 4096
+        buffer_size = 4096
+        # 8 times buffer size
+        max_buffer_size = 32768
+        # Path in zookeeper for kafka consumer group partitioning algo
+        zookeeper_path = /persister_partitions/metrics
+        num_processors = 1
+
+        [influxdb]
+        database_name = mon
+        ip_address = {{ INFLUXDB_IP }}
+        port = 8086
+        user = {{ INFLUXDB_USER }}
+        password = {{ INFLUXDB_PASSWORD }}
+
+        # Uncomment, set cluster_ip_addresses, and change the repositories to point to the cassandra classes
+        #[cassandra]
+        # Comma separated list of Cassandra node IP addresses. No spaces.
+        #cluster_ip_addresses: 192.168.10.6
+        #keyspace: monasca
+
+  - name: Running Monasca persister
+    become: yes
+    shell: 'nohup python /opt/monasca-persister/monasca_persister/persister.py --config-file /etc/monasca/persister.conf &'

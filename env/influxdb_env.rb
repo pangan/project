@@ -1,54 +1,54 @@
 ########################################################################################################################
 # GENERAL
 ########################################################################################################################
-$HOSTS = []
-$GROUPS = {}
-$CLUSTER_HOST_VARS = {}
+$INFLUXDB_HOSTS = []
+$INFLUXDB_GROUPS = {}
+$INFLUXDB_CLUSTER_HOST_VARS = {}
 
 ########################################################################################################################
 # CONFIGURATION (to be modified)
 ########################################################################################################################
-$CLUSTER_NODES = 1 #Number of nodes
+$INFLUXDB_CLUSTER_NODES = 1 #Number of nodes
 
-$HOSTNAME = "influxdb"
-$GROUP_NAME = "influxdb"
-$NETWORK_IPOFFSET = 20
+$INFLUXDB_HOSTNAME = "influxdb"
+$INFLUXDB_GROUP_NAME = "influxdb"
+$INFLUXDB_NETWORK_IPOFFSET = 20
 
 ########################################################################################################################
 # VIRTUALBOX PROVIDER
 ########################################################################################################################
-$VBOX_BOXTYPE = "bento/ubuntu-16.04"
+$INFLUXDB_VBOX_BOXTYPE = "bento/ubuntu-16.04"
 
 ########################################################################################################################
 # PROVISIONING VARIABLES
 ########################################################################################################################
-hosts = []
-(1..$CLUSTER_NODES).each do |i|
-  hosts.push("#{$HOSTNAME}#{i}")
+influxdb_hosts = []
+(1..$INFLUXDB_CLUSTER_NODES).each do |i|
+  influxdb_hosts.push("#{$INFLUXDB_HOSTNAME}#{i}")
 end
 
-(1..$CLUSTER_NODES).each do |i|
-  ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$NETWORK_IPOFFSET}",
-        "hostname" => "#{$HOSTNAME}#{i}",
-        "cluster_id" => "#{i}",
-        "cluster_size" => $CLUSTER_NODES}
-  $CLUSTER_HOST_VARS["#{$HOSTNAME}#{i}"] = ip
+(1..$INFLUXDB_CLUSTER_NODES).each do |i|
+  ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$INFLUXDB_NETWORK_IPOFFSET}",
+        "hostname" => "#{$INFLUXDB_HOSTNAME}#{i}",
+        "INFLUXDB_cluster_id" => "#{i}",
+        "INFLUXDB_cluster_size" => $INFLUXDB_CLUSTER_NODES}
+  $INFLUXDB_CLUSTER_HOST_VARS["#{$INFLUXDB_HOSTNAME}#{i}"] = ip
 end
 
-cluster_servers = []
-(1..$CLUSTER_NODES).each do |i|
-  cluster_servers.push("#{$NETWORK_INTERNAL_IP}#{i+$NETWORK_IPOFFSET}")
+influxdb_cluster_servers = []
+(1..$INFLUXDB_CLUSTER_NODES).each do |i|
+  influxdb_cluster_servers.push("#{$NETWORK_INTERNAL_IP}#{i+$INFLUXDB_NETWORK_IPOFFSET}")
 end
 
-group_vars = {
-    "cluster_size" => $CLUSTER_NODES,
-    "ip_offset" => $NETWORK_IPOFFSET,
-    "hosts" => hosts,
-    "cluster_servers" => cluster_servers
+influxdb_group_vars = {
+    "influxdb_cluster_size" => $INFLUXDB_CLUSTER_NODES,
+    "ip_offset" => $INFLUXDB_NETWORK_IPOFFSET,
+    "influxdb_hosts" => influxdb_hosts,
+    "influxdb_cluster_servers" => influxdb_cluster_servers
 }
 
-$GROUPS["#{$GROUP_NAME}"] = hosts
-$GROUPS["#{$GROUP_NAME}:vars"] = group_vars
+$INFLUXDB_GROUPS["#{$INFLUXDB_GROUP_NAME}"] = influxdb_hosts
+$INFLUXDB_GROUPS["#{$INFLUXDB_GROUP_NAME}:vars"] = influxdb_group_vars
 
 # $CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($GROUPS)
 # $CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($CLUSTER_HOST_VARS)
@@ -57,14 +57,14 @@ $GROUPS["#{$GROUP_NAME}:vars"] = group_vars
 ########################################################################################################################
 # DEFINITION
 ########################################################################################################################
-(1..$CLUSTER_NODES).each do |i|
+(1..$INFLUXDB_CLUSTER_NODES).each do |i|
   Vagrant.configure("2") do |config|
     config.vm.synced_folder ".", "/vagrant", disabled: true
     config.vm.box_check_update = false
 
     config.vm.provider "virtualbox" do |v, override|
       override.ssh.username = $VIRTUALBOX_USERNAME
-      override.vm.box = $VBOX_BOXTYPE
+      override.vm.box = $INFLUXDB_VBOX_BOXTYPE
 
       v.customize ["modifyvm", :id, "--cableconnected1", "on"]
     end
@@ -95,12 +95,12 @@ $GROUPS["#{$GROUP_NAME}:vars"] = group_vars
     #   cc.floating_ip_pool = $INFLUXDB_OPENSTACK_CITYCLOUD_IPPOOL
     # end
 
-    config.vm.define "#{$HOSTNAME}#{i}" do |g|
-      g.vm.hostname = "#{$HOSTNAME}#{i}"
+    config.vm.define "#{$INFLUXDB_HOSTNAME}#{i}" do |g|
+      g.vm.hostname = "#{$INFLUXDB_HOSTNAME}#{i}"
 
       g.vm.provider "virtualbox" do |vb, override|
-        vb.name = "xproject::#{$HOSTNAME}#{i}"
-        override.vm.network "private_network", ip: "#{$NETWORK_INTERNAL_IP}#{i+$NETWORK_IPOFFSET}"
+        vb.name = "xproject::#{$INFLUXDB_HOSTNAME}#{i}"
+        override.vm.network "private_network", ip: "#{$NETWORK_INTERNAL_IP}#{i+$INFLUXDB_NETWORK_IPOFFSET}"
 
         vb.memory = 1024
         vb.cpus = 1
@@ -119,12 +119,12 @@ $GROUPS["#{$GROUP_NAME}:vars"] = group_vars
       #   cc.networks = $INFLUXDB_OPENSTACK_CITYCLOUD_NETWORKS
       # end
 
-      if i == $CLUSTER_NODES
+      if i == $INFLUXDB_CLUSTER_NODES
         g.vm.provision "ansible" do |ansible|
           ansible.limit="all"
           ansible.playbook = "influxdb.yml"
-          ansible.groups = $GROUPS
-          ansible.host_vars = $CLUSTER_HOST_VARS
+          ansible.groups = $INFLUXDB_GROUPS
+          ansible.host_vars = $INFLUXDB_CLUSTER_HOST_VARS
         end
       end
     end
