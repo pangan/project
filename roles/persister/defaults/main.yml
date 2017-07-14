@@ -17,6 +17,6 @@
 
   PERSISTER_CLUSTER: "{{ inventory_hostname }}"
 
-  PERSISTER_CLUSTERID_VARNAME: "cluster_id"
+  PERSISTER_CLUSTERID_VARNAME: "persister_cluster_id"
 
   PERSISTER_CLUSTERID: "{{ hostvars[PERSISTER_CLUSTER][PERSISTER_CLUSTERID_VARNAME] }}"

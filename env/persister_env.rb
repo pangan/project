@@ -30,8 +30,8 @@ end
 (1..$PERSISTER_CLUSTER_NODES).each do |i|
   ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$PERSISTER_NETWORK_IPOFFSET}",
         "hostname" => "#{$PERSISTER_HOSTNAME}#{i}",
-        "PERSISTER_cluster_id" => "#{i}",
-        "PERSISTER_cluster_size" => $PERSISTER_CLUSTER_NODES}
+        "persister_cluster_id" => "#{i}",
+        "persister_cluster_size" => $PERSISTER_CLUSTER_NODES}
   $PERSISTER_CLUSTER_HOST_VARS["#{$PERSISTER_HOSTNAME}#{i}"] = ip
 end
 

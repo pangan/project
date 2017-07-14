@@ -30,8 +30,8 @@ end
 (1..$INFLUXDB_CLUSTER_NODES).each do |i|
   ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$INFLUXDB_NETWORK_IPOFFSET}",
         "hostname" => "#{$INFLUXDB_HOSTNAME}#{i}",
-        "INFLUXDB_cluster_id" => "#{i}",
-        "INFLUXDB_cluster_size" => $INFLUXDB_CLUSTER_NODES}
+        "influxdb_cluster_id" => "#{i}",
+        "influxdb_cluster_size" => $INFLUXDB_CLUSTER_NODES}
   $INFLUXDB_CLUSTER_HOST_VARS["#{$INFLUXDB_HOSTNAME}#{i}"] = ip
 end
 

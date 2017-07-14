@@ -30,8 +30,8 @@ end
 (1..$KAFKA_CLUSTER_NODES).each do |i|
   ip = {"internal_ip" => "#{$NETWORK_INTERNAL_IP}#{i+$KAFKA_NETWORK_IPOFFSET}",
         "hostname" => "#{$KAFKA_HOSTNAME}#{i}",
-        "KAFKA_cluster_id" => "#{i}",
-        "KAFKA_cluster_size" => $KAFKA_CLUSTER_NODES}
+        "kafka_cluster_id" => "#{i}",
+        "kafka_cluster_size" => $KAFKA_CLUSTER_NODES}
   $KAFKA_CLUSTER_HOST_VARS["#{$KAFKA_HOSTNAME}#{i}"] = ip
 end
 
