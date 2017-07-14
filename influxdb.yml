@@ -1,0 +1,24 @@
+---
+- hosts: influxdb
+  gather_facts: no
+  pre_tasks:
+    - name: update apt-get
+      become: yes
+      raw: apt update
+#    - name: update apt-get
+#      become: yes
+#      raw: apt update
+#    - name: update apt-get
+#      become: yes
+#      raw: apt update
+#    - name: install python2.7
+#      become: yes
+#      raw: apt -y install python
+    - name: Gathering facts
+      setup:
+  roles:
+#  - { role: swapfile, become: yes, swapfile_size: 4GB, swapfile_swappiness: 10, swapfile_location: /mnt/swapfile }
+  #- debug
+  #- node_exporter
+  - influxdb
+  #- agent

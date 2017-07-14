@@ -1,0 +1,60 @@
+---
+# -----------------------------------
+# INSTALL INFLUXDB 0.9.6.1
+# -----------------------------------
+#- name: download influxdb deb file
+#  get_url:
+#    url: "{{ INFLUXDB_DEB_URL }}"
+#    dest: "{{ INFLUXDB_DEB_DEST }}"
+#
+#- name: install influxdb 0.9.6.1
+#  become: true
+#  apt:
+#    deb: "{{ INFLUXDB_DEB_DEST }}"
+#    dpkg_options: skip-same-version
+#
+#- name: start influxdb service
+#  become: true
+#  service: name=influxdb  state=started
+
+# -----------------------------------
+# INSTALL LATEST INFLUXDB
+# -----------------------------------
+- name: download influxdb apt-key
+  get_url:
+    url: https://repos.influxdata.com/influxdb.key
+    dest: /tmp/influxdb.key
+
+- name: add influxdb apt-key
+  become: true
+  shell: cat /tmp/influxdb.key | sudo apt-key add -
+  args:
+      executable: /bin/bash
+
+# CAN'T BE SOURCED AT THE MOMENT. NEED TO FIX.
+#- name: get DISTRIB_ID and DISTRIB_CODENAME
+#  become: true
+#  shell: source /etc/lsb-release
+#  args:
+#      executable: /bin/bash
+
+- name: add influxdb repo
+  become: true
+  shell: echo "deb https://repos.influxdata.com/{{ DISTRIB_ID }} {{ DISTRIB_CODENAME}} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+  args:
+      executable: /bin/bash
+
+#- name: update all packages to the latest version
+#  become: true
+#  apt:
+#    upgrade: dist
+
+- name: install latest influxdb
+  become: true
+  apt:
+    name: influxdb
+    state: present
+
+- name: start influxdb service
+  become: true
+  service: name=influxdb  state=started
