@@ -12,12 +12,31 @@
   with_items:
     - "{{ groups['all'] }}"
 
+- name: Add Docker official GPG Key
+  become: yes
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add Docker repository
+  become: yes
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+    state: present
+
+- name: Update apt
+  become: yes
+  apt:
+    update_cache: yes
+
 - name: Install packages
   become: yes
   apt: pkg={{ item }} state=latest
   with_items:
     - openjdk-8-jdk
     - zookeeperd
+    - unzip
+    - docker-ce
 
 - name: Download kafka
   become: yes
@@ -40,3 +59,21 @@
 - name: Start Kafka
   become: yes
   shell: 'nohup /opt/kafka_2.11-0.11.0.0/bin/kafka-server-start.sh /opt/kafka_2.11-0.11.0.0/config/server.properties > /var/log/kafka/kafka.log &'
+
+- name: Download Kafka Manager Docker
+  become: yes
+  get_url:
+    url: https://github.com/sheepkiller/kafka-manager-docker/archive/master.zip
+    dest: /tmp/kafka-manager-docker.zip
+    timeout: 60
+
+- name: Unzip Kafka Manager
+  become: yes
+  unarchive:
+    src: /tmp/kafka-manager-docker.zip
+    dest: /opt/
+    remote_src: yes
+
+- name: Start Kafka manager
+  become: yes
+  shell: '
