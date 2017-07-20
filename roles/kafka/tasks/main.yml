@@ -43,7 +43,7 @@
   get_url:
     url: http://apache.mirrors.spacedump.net/kafka/0.11.0.0/kafka_2.11-0.11.0.0.tgz
     dest: /tmp/kafka_2.11-0.11.0.0.tgz
-    timeout: 60
+    timeout: 90
 
 - name: Unzip Kafka
   become: yes
@@ -55,6 +55,16 @@
 - name: Create log directory
   become: yes
   file: path=/var/log/kafka state=directory
+
+- name: Update Kafka configuration
+  become: yes
+  lineinfile:
+    path: /opt/kafka_2.11-0.11.0.0/config/server.properties
+    regexp: '^#advertised.listeners='
+    line: 'advertised.listeners=PLAINTEXT://{{ hostvars[item].internal_ip }}:9092'
+    state: present
+  with_items:
+        - "{{ groups['all'] }}"
 
 - name: Start Kafka
   become: yes
@@ -74,6 +84,6 @@
     dest: /opt/
     remote_src: yes
 
-- name: Start Kafka manager
-  become: yes
-  shell: '
+#- name: Start Kafka manager
+#  become: yes
+#  shell: 'docker run -it --rm  -p 9000:9000 -e ZK_HOSTS="localhost:2181" -e APPLICATION_SECRET=leein sheepkiller/kafka-manager'

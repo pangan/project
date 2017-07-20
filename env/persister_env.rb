@@ -12,7 +12,7 @@ $PERSISTER_CLUSTER_NODES = 1 #Number of nodes
 
 $PERSISTER_HOSTNAME = "persister"
 $PERSISTER_GROUP_NAME = "persister"
-$PERSISTER_NETWORK_IPOFFSET = 20
+$PERSISTER_NETWORK_IPOFFSET = 30
 
 ########################################################################################################################
 # VIRTUALBOX PROVIDER
@@ -50,8 +50,8 @@ persister_group_vars = {
 $PERSISTER_GROUPS["#{$PERSISTER_GROUP_NAME}"] = persister_hosts
 $PERSISTER_GROUPS["#{$PERSISTER_GROUP_NAME}:vars"] = persister_group_vars
 
-# $CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($GROUPS)
-# $CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($CLUSTER_HOST_VARS)
+$CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($PERSISTER_GROUPS)
+$CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($PERSISTER_CLUSTER_HOST_VARS)
 
 
 ########################################################################################################################
@@ -123,8 +123,8 @@ $PERSISTER_GROUPS["#{$PERSISTER_GROUP_NAME}:vars"] = persister_group_vars
         g.vm.provision "ansible" do |ansible|
           ansible.limit="all"
           ansible.playbook = "persister.yml"
-          ansible.groups = $PERSISTER_GROUPS
-          ansible.host_vars = $PERSISTER_CLUSTER_HOST_VARS
+          ansible.groups = $CLUSTER_GROUPS
+          ansible.host_vars = $CLUSTER_HOST_VARS
         end
       end
     end

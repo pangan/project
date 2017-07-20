@@ -12,7 +12,7 @@ $KAFKA_CLUSTER_NODES = 1 #Number of nodes
 
 $KAFKA_HOSTNAME = "kafka"
 $KAFKA_GROUP_NAME = "kafka"
-$KAFKA_NETWORK_IPOFFSET = 20
+$KAFKA_NETWORK_IPOFFSET = 10
 
 ########################################################################################################################
 # VIRTUALBOX PROVIDER
@@ -50,8 +50,8 @@ kafka_group_vars = {
 $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}"] = kafka_hosts
 $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
 
-# $CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($GROUPS)
-# $CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($CLUSTER_HOST_VARS)
+$CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($KAFKA_GROUPS)
+$CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($KAFKA_CLUSTER_HOST_VARS)
 
 
 ########################################################################################################################
@@ -102,7 +102,7 @@ $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
         vb.name = "xproject::#{$KAFKA_HOSTNAME}#{i}"
         override.vm.network "private_network", ip: "#{$NETWORK_INTERNAL_IP}#{i+$KAFKA_NETWORK_IPOFFSET}"
 
-        vb.memory = 1024
+        vb.memory = 2048
         vb.cpus = 1
       end
 
@@ -123,8 +123,8 @@ $KAFKA_GROUPS["#{$KAFKA_GROUP_NAME}:vars"] = kafka_group_vars
         g.vm.provision "ansible" do |ansible|
           ansible.limit="all"
           ansible.playbook = "kafka.yml"
-          ansible.groups = $KAFKA_GROUPS
-          ansible.host_vars = $KAFKA_CLUSTER_HOST_VARS
+          ansible.groups = $CLUSTER_GROUPS
+          ansible.host_vars = $CLUSTER_HOST_VARS
         end
       end
     end

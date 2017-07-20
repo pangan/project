@@ -58,3 +58,15 @@
 - name: start influxdb service
   become: true
   service: name=influxdb  state=started
+
+- name: Create user in influxdb
+  become: true
+  uri:
+    url: http://10.5.0.21:8086/query
+    method: POST
+    body: "q=CREATE USER xproject with password 'password' with all privileges"
+    body_format: raw
+
+#- name: Create user in influxdb
+#  become: true
+#  shell: 'curl -XPOST http://10.5.0.21:8086/query --data-urlencode "q=CREATE USER amir2 with password 123456 with all privileges"'

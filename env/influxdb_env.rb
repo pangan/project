@@ -50,8 +50,8 @@ influxdb_group_vars = {
 $INFLUXDB_GROUPS["#{$INFLUXDB_GROUP_NAME}"] = influxdb_hosts
 $INFLUXDB_GROUPS["#{$INFLUXDB_GROUP_NAME}:vars"] = influxdb_group_vars
 
-# $CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($GROUPS)
-# $CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($CLUSTER_HOST_VARS)
+$CLUSTER_GROUPS = $CLUSTER_GROUPS.merge($INFLUXDB_GROUPS)
+$CLUSTER_HOST_VARS = $CLUSTER_HOST_VARS.merge($INFLUXDB_CLUSTER_HOST_VARS)
 
 
 ########################################################################################################################
@@ -123,8 +123,8 @@ $INFLUXDB_GROUPS["#{$INFLUXDB_GROUP_NAME}:vars"] = influxdb_group_vars
         g.vm.provision "ansible" do |ansible|
           ansible.limit="all"
           ansible.playbook = "influxdb.yml"
-          ansible.groups = $INFLUXDB_GROUPS
-          ansible.host_vars = $INFLUXDB_CLUSTER_HOST_VARS
+          ansible.groups = $CLUSTER_GROUPS
+          ansible.host_vars = $CLUSTER_HOST_VARS
         end
       end
     end

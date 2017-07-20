@@ -9,8 +9,8 @@
 #
 #  ZOOKEEPER_CLUSTER_INFO_CONF_VARNAME: "zookeeper_cluster_info"
 #  ZOOKEEPER_URI: "{{ hostvars[KAFKA_INVENTORY][ZOOKEEPER_CLUSTER_INFO_CONF_VARNAME] }}"
-  KAFKA_URI: "10.5.0.11:9092"
-  ZOOKEEPER_URI: "10.5.0.11:2181"
+  KAFKA_URI: ["10.5.0.11:9092"]
+  ZOOKEEPER_URI: ["10.5.0.11:2181"]
 ########################################################################################################################
 ## Variables taken from vagrant
 ########################################################################################################################
